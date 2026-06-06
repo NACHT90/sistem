@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Misafir Yönetim Sistemi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { brand: '#1a2035', brandHover: '#2b3453', pageBg: '#f8fafc', panelBg: '#ffffff', accent: '#e2e8f0' } } } }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; transition: background-color 0.3s, color 0.3s; }
+        .panel-shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
+        .active-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .search-icon { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%2394a3b8"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>'); background-repeat: no-repeat; background-position: 15px center; background-size: 20px 20px; padding-left: 50px; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        html.dark { background-color: #0f172a; color: #f8fafc; }
+        html.dark body { background-color: #0f172a; color: #f8fafc; }
+        html.dark .bg-pageBg { background-color: #0f172a !important; }
+        html.dark .bg-panelBg, html.dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
+        html.dark .bg-slate-50, html.dark .bg-slate-100, html.dark .bg-slate-200 { background-color: #0f172a !important; border-color: #334155 !important; color: #f8fafc !important; }
+        html.dark .text-slate-800, html.dark .text-slate-700 { color: #f8fafc !important; }
+        html.dark .text-slate-600, html.dark .text-slate-500, html.dark .text-slate-400 { color: #94a3b8 !important; }
+        html.dark .border-slate-100, html.dark .border-slate-200, html.dark .border-slate-300, html.dark .border-accent { border-color: #334155 !important; }
+        html.dark input, html.dark select, html.dark textarea { background-color: #1e293b !important; color: #f8fafc !important; border-color: #475569 !important; }
+        html.dark input:focus, html.dark select:focus, html.dark textarea:focus { border-color: #3b82f6 !important; }
+        html.dark .shadow-sm, html.dark .panel-shadow, html.dark .active-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important; }
+        html.dark .bg-brand { background-color: #020617 !important; border-color: #1e293b !important; }
+        html.dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.1) !important; border-color: rgba(16, 185, 129, 0.2) !important; }
+        html.dark .text-emerald-900 { color: #34d399 !important; }
+        html.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.1) !important; border-color: rgba(239, 68, 68, 0.2) !important; }
+        html.dark .text-red-900 { color: #f87171 !important; }
+        html.dark th { background-color: #0f172a !important; color: #cbd5e1 !important; }
+        html.dark #custom-context-menu { background-color: #1e293b !important; border-color: #475569 !important; }
+        html.dark #context-delete-btn:hover { background-color: rgba(239, 68, 68, 0.1) !important; }
+        .calc-btn { background-color: #f1f5f9; color: #334155; font-size: 1.25rem; font-weight: 600; padding: 1rem; border-radius: 0.75rem; transition: all 0.1s; border: 1px solid #e2e8f0; }
+        .calc-btn:hover { background-color: #e2e8f0; }
+        .calc-btn:active { transform: scale(0.95); }
+        .calc-op { background-color: #e0e7ff; color: #047857; border-color: #a7f3d0; }
+        .calc-op:hover { background-color: #d1fae5; }
+        html.dark .calc-btn { background-color: #334155; color: #f8fafc; border-color: #475569; }
+        html.dark .calc-btn:hover { background-color: #475569; }
+        html.dark .calc-op { background-color: #064e3b; color: #34d399; border-color: #065f46; }
+        html.dark .calc-op:hover { background-color: #065f46; }
+    </style>
+</head>
+<body class="bg-pageBg text-slate-800 antialiased overflow-hidden">
+    <div id="app-screen" class="flex h-screen">
+        <aside class="w-[280px] bg-brand text-white flex flex-col p-6 space-y-3 shrink-0 z-10 relative shadow-2xl transition-colors duration-300">
+            <div class="text-2xl font-bold mb-14 mt-4 flex items-center space-x-3">
+                <span class="text-3xl">🏨</span><span id="txt-logo">VIP OTEL CRM</span>
+            </div>
+            <button id="nav-dashboard" class="nav-btn flex items-center space-x-3.5 p-3.5 rounded-xl bg-brandHover active-shadow w-full text-left font-medium transition cursor-pointer">
+                <span class="text-lg">📊</span> <span id="txt-menu-1">Dashboard</span>
+            </button>
+            <button id="nav-musteriler" class="nav-btn flex items-center space-x-3.5 p-3.5 rounded-xl hover:bg-brandHover w-full text-left font-medium transition cursor-pointer">
+                <span class="text-lg">👥</span> <span id="txt-menu-2">Misafirler</span>
+            </button>
+            <button id="nav-analiz" class="nav-btn flex items-center space-x-3.5 p-3.5 rounded-xl hover:bg-brandHover w-full text-left font-medium transition cursor-pointer">
+                <span class="text-lg">📈</span> <span id="txt-menu-3">Aylık Analiz</span>
+            </button>
+            <button id="nav-otonom" class="nav-btn flex items-center space-x-3.5 p-3.5 rounded-xl hover:bg-brandHover w-full text-left font-medium transition cursor-pointer">
+                <span class="text-lg">🤖</span> <span id="txt-menu-5">Otonom Bot</span>
+            </button>
+            <div class="border-t border-slate-700 my-2 pt-2"></div>
+            <button id="nav-calc" class="nav-btn flex items-center space-x-3.5 p-3.5 rounded-xl hover:bg-brandHover w-full text-left font-medium transition cursor-pointer">
+                <span class="text-lg">🧮</span> <span id="txt-menu-4">Hesap Makinesi</span>
+            </button>
+        </aside>
+        <main class="flex-grow flex flex-col bg-[#f0f3f8] h-full relative z-0 transition-colors duration-300">
+            <header class="h-24 bg-panelBg border-b border-accent flex items-center justify-end px-12 shrink-0 panel-shadow z-10 transition-colors duration-300 space-x-4">
+                <select id="currency-selector" class="w-20 h-14 bg-slate-100 border border-slate-300 text-slate-700 dark:text-white dark:bg-slate-800 dark:border-slate-600 font-bold rounded-xl px-2 outline-none focus:ring-2 focus:ring-brand cursor-pointer text-xl shadow-inner hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Global Para Birimi">
+                    <option value="₺">₺</option>
+                    <option value="$">$</option>
+                    <option value="€">€</option>
+                    <option value="£">£</option>
+                </select>
+                <div class="relative">
+                    <button id="btn-reminders" class="w-14 h-14 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-2xl shadow-inner hover:bg-slate-200 transition cursor-pointer" title="Ajanda ve Hatırlatılar">📅</button>
+                    <span id="reminder-badge" class="hidden absolute top-0 right-0 w-4 h-4 bg-red-500 border-2 border-white dark:border-slate-800 rounded-full"></span>
+                </div>
+                <button id="theme-toggle-btn" class="w-14 h-14 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-2xl shadow-inner hover:bg-slate-200 transition cursor-pointer" title="Gece / Gündüz Modu">🌙</button>
+                <button id="profile-btn" class="w-14 h-14 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-2xl font-semibold shadow-inner hover:bg-slate-300 transition cursor-pointer" title="Yönetici">👨‍💼</button>
+            </header>
+            <div class="flex-grow overflow-hidden relative z-0">
+                <div id="view-dashboard" class="absolute inset-0 p-10 fade-in flex flex-col">
+                    <div class="flex justify-between items-center mb-6 shrink-0">
+                        <h2 class="text-3xl font-bold tracking-tight flex items-center space-x-3"><span>💳</span><span id="txt-baslik-1">Finansal Dashboard</span></h2>
+                        <div class="flex items-center space-x-4">
+                            <button id="btn-add-column" class="bg-brand text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-brandHover transition flex items-center space-x-2 cursor-pointer"><span>➕</span><span>Yeni Sütun Ekle</span></button>
+                            <div class="flex items-center space-x-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm transition-colors duration-300">
+                                <span class="text-slate-500 font-bold px-3 text-sm uppercase tracking-wide">Dönem:</span>
+                                <select id="dash-ay-secici" class="bg-slate-50 border border-slate-200 text-brand font-bold rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-brand cursor-pointer text-lg"></select>
+                                <select id="dash-yil-secici" class="bg-slate-50 border border-slate-200 text-brand font-bold rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-brand cursor-pointer text-lg"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-6 mb-8 shrink-0">
+                        <div class="bg-panelBg p-6 rounded-2xl panel-shadow border border-accent flex items-center space-x-4 transition-colors duration-300"><div class="text-4xl">👥</div><div><div class="text-sm font-bold text-slate-400 uppercase tracking-wider">Toplam Misafir</div><div id="stat-total-customer" class="text-3xl font-bold text-brand mt-1">0</div></div></div>
+                        <div class="bg-emerald-50 p-6 rounded-2xl panel-shadow border border-emerald-200 flex items-center space-x-4 transition-colors duration-300"><div class="text-4xl">💰</div><div><div class="text-sm font-bold text-emerald-600 uppercase tracking-wider" id="txt-donem-gelir">Dönem Toplam Geliri</div><div id="stat-total-kazanc" class="text-2xl font-bold text-emerald-900 mt-1">0</div></div></div>
+                        <div class="bg-red-50 p-6 rounded-2xl panel-shadow border border-red-200 flex items-center space-x-4 transition-colors duration-300"><div class="text-4xl">📉</div><div><div class="text-sm font-bold text-red-600 uppercase tracking-wider" id="txt-donem-gider">Dönem Toplam Gideri</div><div id="stat-total-zarar" class="text-2xl font-bold text-red-900 mt-1">0</div></div></div>
+                    </div>
+                    <div class="bg-panelBg rounded-3xl panel-shadow border border-accent flex-grow flex flex-col overflow-hidden transition-colors duration-300">
+                        <div class="overflow-auto flex-grow h-full relative z-0">
+                            <table class="w-full text-left border-collapse min-w-max relative z-0"><thead class="sticky top-0 bg-slate-100 shadow-sm z-10 transition-colors duration-300"><tr id="dashboard-table-head" class="text-slate-500 text-sm uppercase tracking-wider"></tr></thead><tbody id="dashboard-table-body" class="divide-y divide-slate-100 relative z-0 transition-colors duration-300"></tbody></table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="view-musteriler" class="hidden absolute inset-0 p-10 space-x-8 fade-in">
+                    <section class="flex-grow bg-panelBg p-9 rounded-3xl panel-shadow border border-accent flex flex-col min-h-0 relative z-0 transition-colors duration-300">
+                        <div class="flex justify-between items-center mb-6 shrink-0">
+                            <h2 class="text-2xl font-bold tracking-tight" id="txt-baslik-2">MİSAFİR LİSTESİ</h2>
+                            <div class="flex space-x-3.5">
+                                <input type="file" id="import-json-input" accept=".json" class="hidden">
+                                <button id="import-json-btn" class="px-5 py-2.5 bg-slate-600 text-white rounded-xl hover:bg-slate-700 flex items-center space-x-2 transition text-sm font-semibold active-shadow cursor-pointer"><span>📥</span><span>İçe Aktar</span></button>
+                                <button id="btn-open-export" class="px-5 py-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 flex items-center space-x-2 transition text-sm font-semibold active-shadow cursor-pointer"><span>📤</span><span>Dışa Aktar</span></button>
+                                <button id="export-excel-btn" class="w-12 h-12 bg-green-600 text-white rounded-xl hover:bg-green-700 flex items-center justify-center transition active-shadow cursor-pointer" title="Excel Raporu"><span class="text-xl">📊</span></button>
+                                <button id="yeni-ekle-btn" class="px-6 py-2.5 bg-brand text-white rounded-xl hover:bg-brandHover transition font-semibold active-shadow cursor-pointer">+ Yeni Misafir</button>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-4 mb-6 shrink-0 border-b border-slate-200 dark:border-slate-700">
+                            <button id="tab-hepsi" class="text-brand dark:text-white font-bold border-b-2 border-brand dark:border-white pb-2 px-3 transition cursor-pointer text-lg">Tüm Liste</button>
+                            <button id="tab-tam" class="text-slate-400 hover:text-emerald-500 font-semibold border-b-2 border-transparent pb-2 px-3 transition cursor-pointer text-lg">Tam Kayıtlılar</button>
+                            <button id="tab-eksik" class="text-slate-400 hover:text-red-500 font-semibold border-b-2 border-transparent pb-2 px-3 transition cursor-pointer text-lg">Eksik Bilgililer</button>
+                        </div>
+
+                        <input type="text" id="search-input" placeholder="Misafir Adı veya Şehir Ara..." class="search-icon w-full h-14 p-4 mb-6 border border-accent rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand focus:border-brand outline-none transition panel-shadow shrink-0">
+                        <div id="customer-list" class="space-y-4 flex-grow overflow-y-auto pr-2 pb-4"></div>
+                    </section>
+                    <section id="detail-panel" class="w-[450px] bg-panelBg p-8 rounded-3xl panel-shadow border border-accent shrink-0 flex flex-col overflow-y-auto relative z-0 transition-colors duration-300">
+                        <div class="flex flex-col items-center justify-center h-full opacity-60"><div class="text-7xl mb-6">🛎️</div><h3 class="text-lg font-bold mb-2 text-center text-slate-500 tracking-tight">MİSAFİR DOSYASI</h3><p class="text-center text-slate-400 max-w-[250px] leading-relaxed">Tüm tercihleri ve finansal detayları görmek için bir misafir seçin.</p></div>
+                    </section>
+                </div>
+                
+                <div id="view-analiz" class="hidden absolute inset-0 p-10 fade-in flex-col overflow-hidden">
+                    <div class="flex justify-between items-center mb-6 shrink-0">
+                        <h2 class="text-3xl font-bold tracking-tight flex items-center space-x-3"><span>📈</span><span id="txt-baslik-3">Tarihsel Analiz & Defter</span></h2>
+                        <div class="flex items-center space-x-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm transition-colors duration-300"><span class="text-slate-500 font-bold px-3 text-sm uppercase tracking-wide">Yıl Seçin:</span><select id="analiz-yil-secici" class="bg-slate-50 border border-slate-200 text-brand font-bold rounded-lg px-6 py-2.5 outline-none focus:ring-2 focus:ring-brand cursor-pointer text-lg"></select></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-6 mb-8 shrink-0">
+                        <div class="bg-emerald-50 p-6 rounded-2xl panel-shadow border border-emerald-200 flex items-center space-x-4 transition-colors duration-300"><div class="text-4xl">💰</div><div><div class="text-sm font-bold text-emerald-600 uppercase tracking-wider" id="txt-yil-gelir">Seçili Yıl Toplam Gelir</div><div id="analiz-toplam-kazanc" class="text-2xl font-bold text-emerald-900 mt-1">0</div></div></div>
+                        <div class="bg-red-50 p-6 rounded-2xl panel-shadow border border-red-200 flex items-center space-x-4 transition-colors duration-300"><div class="text-4xl">📉</div><div><div class="text-sm font-bold text-red-600 uppercase tracking-wider" id="txt-yil-gider">Seçili Yıl Toplam Gider</div><div id="analiz-toplam-gider" class="text-2xl font-bold text-red-900 mt-1">0</div></div></div>
+                        <div class="bg-brand p-6 rounded-2xl panel-shadow border border-brand flex items-center space-x-4 text-white transition-colors duration-300"><div class="text-4xl">📊</div><div><div class="text-sm font-bold text-slate-300 uppercase tracking-wider">Yıllık Net Durum</div><div id="analiz-toplam-net" class="text-2xl font-bold text-white mt-1">0</div></div></div>
+                    </div>
+                    <div class="flex space-x-8 flex-grow overflow-hidden">
+                        <div class="w-2/3 bg-panelBg p-6 rounded-3xl panel-shadow border border-accent flex flex-col relative z-0 transition-colors duration-300"><h3 class="text-lg font-bold text-slate-700 mb-6 shrink-0">Aylık Finansal Grafik Tablosu</h3><div class="flex-grow relative w-full h-full"><canvas id="analizGrafigi"></canvas></div></div>
+                        <div class="w-1/3 bg-panelBg rounded-3xl panel-shadow border border-accent flex flex-col overflow-hidden relative z-0 transition-colors duration-300"><div class="p-5 border-b border-slate-200 bg-slate-50 shrink-0 transition-colors duration-300"><h3 class="text-lg font-bold text-slate-700">Aylık Otel Defteri (Genel)</h3><p class="text-xs text-slate-500 mt-1">Rakamı girdiğiniz an sisteme işlenir.</p></div><div class="overflow-y-auto flex-grow p-0"><table class="w-full text-left border-collapse text-sm"><thead class="bg-slate-100 sticky top-0 z-10 transition-colors duration-300"><tr class="text-slate-500 uppercase tracking-wider text-xs"><th class="p-4 font-bold border-b border-slate-200">Ay</th><th class="p-4 font-bold border-b border-slate-200 border-l text-right">+ (Artı)</th><th class="p-4 font-bold border-b border-slate-200 border-l text-right">- (Eksi)</th></tr></thead><tbody id="analiz-tablo-body" class="divide-y divide-slate-100"></tbody></table></div></div>
+                    </div>
+                </div>
+                
+                <div id="view-otonom" class="hidden absolute inset-0 p-10 fade-in flex-col items-center justify-center">
+                    <div class="bg-panelBg p-10 rounded-3xl panel-shadow border border-accent flex flex-col items-center text-center max-w-2xl w-full transition-colors duration-300">
+                        <div class="text-6xl mb-6">🤖</div>
+                        <h2 class="text-3xl font-bold tracking-tight text-brand mb-4">Jarvis Otonom Veri Aktarımı</h2>
+                        <p class="text-slate-500 mb-8 leading-relaxed">
+                            Binlerce satırlık listeyi (.txt) seçerek sisteme tek tıkla entegre edebilirsiniz. Sistem aynı TC, Numara veya isme sahip kişileri tekrar kaydetmez, akıllıca birleştirir (Eksik verilerini doldurur).
+                        </p>
+                        <input type="file" id="otonom-file-input" accept=".txt" class="hidden">
+                        <button id="btn-otonom-baslat" class="px-8 py-4 bg-brand text-white rounded-xl hover:bg-brandHover transition font-bold shadow-lg flex items-center space-x-3 cursor-pointer text-lg">
+                            <span>📂</span>
+                            <span>Akıllı TXT Aktarımını Başlat</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="reminder-drawer" class="fixed right-0 top-0 bottom-0 w-[400px] bg-white dark:bg-slate-800 shadow-[[-10px_0_30px_rgba(0,0,0,0.1)]] z-[9999] transform translate-x-full transition-transform duration-300 flex flex-col border-l border-slate-200 dark:border-slate-700">
+        <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900 shrink-0"><h2 class="text-xl font-bold text-brand dark:text-white flex items-center space-x-2"><span>📅</span><span>Ajanda & Hatırlatılar</span></h2><button id="close-reminders" class="text-2xl text-slate-500 hover:text-red-500 transition cursor-pointer">✕</button></div>
+        <div id="reminder-list" class="flex-grow p-6 overflow-y-auto space-y-4 bg-white dark:bg-slate-800"></div>
+        <div class="p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shrink-0"><h3 class="text-sm font-bold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wide">Yeni Hatırlatı Ekle</h3><input type="date" id="reminder-date" class="w-full mb-3 p-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-white focus:ring-2 focus:ring-brand outline-none cursor-pointer"><input type="text" id="reminder-note" placeholder="Notunuz (Örn: Ayşe Hn. Transferi)" class="w-full mb-4 p-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-white focus:ring-2 focus:ring-brand outline-none"><button id="add-reminder-btn" class="w-full py-3.5 bg-brand text-white rounded-xl hover:bg-brandHover transition font-bold shadow-md cursor-pointer flex items-center justify-center space-x-2"><span>➕</span><span>Listeye Ekle</span></button></div>
+    </div>
+    
+    <div id="calc-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 transition-opacity p-10">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl w-[360px] transition-colors duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-brand dark:text-white flex items-center space-x-2"><span>🧮</span><span>Hesap Makinesi</span></h2>
+                <button id="close-calc-btn" class="text-2xl text-slate-500 hover:text-red-500 transition cursor-pointer">✕</button>
+            </div>
+            <div class="w-full h-20 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 mb-4 flex items-center justify-end px-4 shadow-inner overflow-hidden"><span id="calc-display" class="text-3xl font-bold text-slate-800 dark:text-white tracking-wider">0</span></div>
+            <div class="grid grid-cols-4 gap-3">
+                <button class="calc-btn text-red-500 font-bold" onclick="calcAction('C')">C</button><button class="calc-btn text-orange-500 font-bold" onclick="calcAction('DEL')">⌫</button><button class="calc-btn calc-op" onclick="calcAction('/')">÷</button><button class="calc-btn calc-op" onclick="calcAction('*')">×</button>
+                <button class="calc-btn" onclick="calcAction('7')">7</button><button class="calc-btn" onclick="calcAction('8')">8</button><button class="calc-btn" onclick="calcAction('9')">9</button><button class="calc-btn calc-op" onclick="calcAction('-')">-</button>
+                <button class="calc-btn" onclick="calcAction('4')">4</button><button class="calc-btn" onclick="calcAction('5')">5</button><button class="calc-btn" onclick="calcAction('6')">6</button><button class="calc-btn calc-op" onclick="calcAction('+')">+</button>
+                <button class="calc-btn" onclick="calcAction('1')">1</button><button class="calc-btn" onclick="calcAction('2')">2</button><button class="calc-btn" onclick="calcAction('3')">3</button><button class="calc-btn bg-brand text-white dark:bg-brand dark:text-white row-span-2 shadow-lg" onclick="calcAction('=')">=</button>
+                <button class="calc-btn col-span-2" onclick="calcAction('0')">0</button><button class="calc-btn" onclick="calcAction('.')">.</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="export-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 transition-opacity p-10">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl w-[500px] transition-colors duration-300 flex flex-col max-h-[90vh]">
+            <h2 class="text-2xl font-bold mb-6 text-brand dark:text-white flex items-center space-x-2 shrink-0"><span>📤</span><span>Veri Dışa Aktar</span></h2>
+            <div class="flex space-x-4 mb-6 shrink-0"><label class="flex-1 border border-slate-200 dark:border-slate-700 p-4 rounded-xl flex items-center space-x-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition"><input type="radio" name="export-type" value="all" class="w-5 h-5 text-brand" checked><span class="font-bold text-slate-700 dark:text-slate-200">Tüm Misafirler</span></label><label class="flex-1 border border-slate-200 dark:border-slate-700 p-4 rounded-xl flex items-center space-x-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition"><input type="radio" name="export-type" value="custom" class="w-5 h-5 text-brand"><span class="font-bold text-slate-700 dark:text-slate-200">Özel Seçim</span></label></div>
+            <div id="export-custom-area" class="hidden flex-col flex-grow min-h-0 mb-6 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 overflow-hidden"><div class="p-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0"><div class="relative"><span class="absolute left-3 top-2.5 text-slate-400">🔍</span><input type="text" id="export-search-input" placeholder="Listede misafir veya şehir ara..." class="w-full pl-9 p-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 text-sm focus:ring-2 focus:ring-brand outline-none text-slate-700 dark:text-white transition"></div></div><div id="export-checklist-container" class="flex-grow overflow-y-auto p-4 space-y-2"></div></div>
+            <div class="flex justify-end space-x-3 shrink-0"><button id="cancel-export-btn" class="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition font-bold cursor-pointer">İptal</button><button id="confirm-export-btn" class="px-6 py-3 bg-brand text-white rounded-xl hover:bg-brandHover transition font-bold cursor-pointer flex items-center space-x-2"><span>📥</span><span>JSON İndir</span></button></div>
+        </div>
+    </div>
+    
+    <div id="add-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 transition-opacity p-10"><div class="bg-white p-9 rounded-3xl shadow-2xl w-[900px] max-h-[90vh] overflow-y-auto relative transition-colors duration-300"><h2 class="text-3xl font-bold mb-8 text-brand flex items-center space-x-3"><span>📂</span><span>VIP Misafir Dosyası Oluştur</span></h2><div class="grid grid-cols-2 gap-8"><div class="space-y-4"><h3 class="font-semibold text-slate-400 border-b pb-2 mb-4 uppercase text-sm tracking-wider">Kişisel Bilgiler</h3><div class="flex items-center space-x-4 mb-4"><div id="photo-preview" class="w-16 h-16 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-2xl shadow-inner text-slate-400 overflow-hidden shrink-0">👤</div><div class="flex-grow"><label class="block text-xs font-bold text-slate-500 mb-1">Profil Fotoğrafı</label><input type="file" id="new-photo" accept="image/jpeg,image/png" class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 cursor-pointer"></div></div><input type="text" id="new-ad" placeholder="Ad Soyad" class="w-full p-3.5 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand outline-none"><input type="text" id="new-tc" placeholder="TC Kimlik No (11 Hane)" maxlength="11" class="w-full p-3.5 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand outline-none"><input type="text" id="new-telefon" placeholder="Telefon" class="w-full p-3.5 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand outline-none"><input type="email" id="new-email" placeholder="E-Posta" class="w-full p-3.5 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand outline-none"><div class="flex space-x-4"><input type="text" id="new-sehir" placeholder="Şehir / Ülke" class="w-1/3 p-3.5 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand outline-none"><input type="text" id="new-adres" placeholder="Açık Adres" class="w-2/3 p-3.5 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand outline-none"></div></div><div class="space-y-4"><h3 class="font-semibold text-slate-400 border-b pb-2 mb-4 uppercase text-sm tracking-wider">Konaklama & Belgeler</h3><div><label class="block text-xs font-bold text-slate-500 mb-1">Oda Setup Tercihleri</label><textarea id="new-setup" rows="2" placeholder="Örn: Viski, glutensiz atıştırmalık, ekstra yastık..." class="w-full p-3.5 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand outline-none resize-none"></textarea></div><div class="flex space-x-4"><div class="w-1/2"><label class="block text-xs font-bold text-slate-500 mb-1">Transfer Tercihi</label><select id="new-transfer" class="w-full p-3.5 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand outline-none text-slate-700"><option value="Bilinmiyor">Seçiniz...</option><option value="VIP Araç" id="txt-vip-1">Otel Aracı (VIP Transfer)</option><option value="Taksi">Taksi</option><option value="Kendi Aracı">Kendi Aracı</option></select></div><div class="w-1/2"><label class="block text-xs font-bold text-slate-500 mb-1" id="txt-harcama-1">Harcama Bütçesi</label><div class="relative flex items-center"><select id="new-harcama-kur" class="absolute left-2 top-2.5 bg-transparent text-slate-600 font-bold outline-none cursor-pointer z-10"><option value="₺">₺</option><option value="$">$</option><option value="€">€</option><option value="£">£</option></select><input type="number" id="new-harcama" placeholder="Örn: 50000" class="w-full pl-12 p-3.5 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand outline-none"></div></div></div><div><label class="block text-xs font-bold text-slate-500 mb-1">Sevdiği / Sık Gittiği Diğer Oteller</label><input type="text" id="new-oteller" placeholder="Örn: Rixos, Maxx Royal..." class="w-full p-3.5 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand outline-none"></div><div class="grid grid-cols-2 gap-4 mt-4"><div class="p-3 bg-slate-50 border border-slate-200 rounded-xl"><label class="block text-xs font-bold text-brand mb-2 flex items-center space-x-2"><span>🪪</span><span>Kimlik Yükle</span></label><input type="file" id="new-kimlik" accept="image/jpeg,image/png" class="block w-full text-[10px] text-slate-500 file:mr-2 file:py-1.5 file:px-2 file:rounded-lg file:border-0 file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 cursor-pointer mb-2"><div id="kimlik-preview" class="hidden w-full h-20 bg-slate-200 rounded-lg overflow-hidden border border-slate-300"></div></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-xl"><label class="block text-xs font-bold text-brand mb-2 flex items-center space-x-2"><span>🛂</span><span>Pasaport Yükle</span></label><input type="file" id="new-pasaport" accept="image/jpeg,image/png" class="block w-full text-[10px] text-slate-500 file:mr-2 file:py-1.5 file:px-2 file:rounded-lg file:border-0 file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 cursor-pointer mb-2"><div id="pasaport-preview" class="hidden w-full h-20 bg-slate-200 rounded-lg overflow-hidden border border-slate-300"></div></div></div></div></div><div class="flex justify-end space-x-3.5 mt-8 border-t pt-6 border-slate-200"><button id="cancel-add-btn" class="px-8 py-3.5 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition font-bold cursor-pointer">İptal</button><button id="save-add-btn" class="px-8 py-3.5 bg-brand text-white rounded-xl hover:bg-brandHover transition font-bold cursor-pointer">Misafir Kaydı Oluştur</button></div></div></div>
+    
+    <div id="col-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 transition-opacity p-10"><div class="bg-white p-8 rounded-3xl shadow-2xl w-[450px] transition-colors duration-300"><h2 class="text-2xl font-bold mb-6 text-brand">Yeni Sütun Ekle</h2><label class="block text-sm font-bold text-slate-500 mb-2">Sütun Adı</label><input type="text" id="col-name" placeholder="Örn: Özel Not, SPA Gideri vb." class="w-full p-4 mb-6 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand outline-none"><label class="block text-sm font-bold text-slate-500 mb-2">Hesaplama Türü</label><select id="col-type" class="w-full p-4 mb-8 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-brand outline-none font-bold cursor-pointer"><option value="gelir" class="text-emerald-600">+ (Artı / Gelir)</option><option value="gider" class="text-red-600">- (Eksi / Gider)</option><option value="notr" class="text-slate-600">Sadece Bilgi (Hesaplamaya Katılmaz)</option></select><div class="flex justify-end space-x-3"><button id="cancel-col-btn" class="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition font-bold cursor-pointer">İptal</button><button id="save-col-btn" class="px-6 py-3 bg-brand text-white rounded-xl hover:bg-brandHover transition font-bold cursor-pointer">Sütunu Ekle</button></div></div></div>
+    
+    <div id="custom-context-menu" class="hidden fixed bg-white border border-slate-200 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] rounded-xl py-2 w-48 z-[10000] transform transition-all duration-100 scale-95 opacity-0"><button id="context-delete-btn" class="w-full text-left px-5 py-3 text-red-600 hover:bg-red-50 font-bold flex items-center space-x-3 transition cursor-pointer"><span class="text-lg">🗑️</span><span id="context-menu-text">Sil</span></button></div>
+    
+    <div id="lock-screen" class="fixed inset-0 bg-brand flex flex-col items-center justify-center z-[9999] transition-opacity duration-500"><div class="text-7xl mb-6 text-white drop-shadow-lg">🛡️</div><h1 class="text-4xl font-bold text-white mb-2 tracking-tight">SİSTEM KİLİTLİ</h1><p class="text-slate-400 mb-8 text-center max-w-sm" id="lock-message">Lütfen Jarvis güvenlik protokolünü açmak için PIN kodunuzu girin.</p><div class="bg-white p-8 rounded-3xl shadow-2xl w-96 flex flex-col items-center"><input type="password" id="pin-input" maxlength="4" placeholder="••••" class="w-full text-center text-5xl tracking-[0.5em] p-4 mb-6 border-b-2 border-slate-200 focus:border-brand outline-none text-brand font-bold bg-transparent transition"><button id="unlock-btn" class="w-full py-4 bg-brand text-white rounded-xl hover:bg-brandHover transition font-bold text-lg shadow-md cursor-pointer flex items-center justify-center space-x-2"><span>Kilidi Aç</span></button></div></div>
+    
+    <div id="jarvis-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center z-[99999] transition-opacity p-4 fade-in">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl w-full max-w-md transform scale-100 transition-transform">
+            <div class="flex items-center space-x-4 mb-6">
+                <div id="jarvis-modal-icon" class="text-4xl">⚠️</div>
+                <h2 id="jarvis-modal-title" class="text-2xl font-bold text-slate-800 dark:text-white">Uyarı</h2>
+            </div>
+            <p id="jarvis-modal-message" class="text-slate-600 dark:text-slate-300 mb-8 text-lg leading-relaxed"></p>
+            <div id="jarvis-modal-buttons" class="flex justify-end space-x-3"></div>
+        </div>
+    </div>
+    
+    <script src="renderer.js"></script>
+</body>
+</html>

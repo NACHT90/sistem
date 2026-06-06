@@ -1,0 +1,19 @@
+{
+    "logo_yazisi": "VIP OTEL CRM",
+    "menu_1": "Dashboard",
+    "menu_2": "Misafirler",
+    "menu_3": "Aylık Analiz",
+    "menu_4": "Hesap Makinesi",
+    "menu_5": "Otonom Bot",
+    "baslik_1": "Finansal Dashboard",
+    "baslik_2": "MİSAFİR LİSTESİ",
+    "baslik_3": "Tarihsel Analiz & Defter",
+    "donem_gelir": "DÖNEM TOPLAM GELİRİ",
+    "donem_gider": "DÖNEM TOPLAM GİDERİ",
+    "secili_yil_gelir": "SEÇİLİ YIL TOPLAM GELİR",
+    "secili_yil_gider": "SEÇİLİ YIL TOPLAM GİDER",
+    "harcama_butcesi": "Harcama Bütçesi",
+    "vip_arac": "VIP Araç",
+    "varsayilan_gelir_tablosu": "AYLIK KAZANÇ",
+    "varsayilan_gider_tablosu": "AYLIK GİDER"
+}
